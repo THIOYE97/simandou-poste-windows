@@ -1,0 +1,44 @@
+{
+  "name": "simandou-lbcft-desktop",
+  "version": "1.0.0",
+  "description": "Poste de travail Windows (accès Bureau) pour la solution LBC/FT BCRG — wrapper Electron de l'application analyste.",
+  "main": "main.js",
+  "author": "Simandou Screening",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win --x64",
+    "dist:win-portable": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "gn.bcrg.lbcft.desktop",
+    "productName": "BCRG LBC-FT",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "assets/**"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "artifactName": "BCRG-LBCFT-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BCRG LBC-FT"
+    }
+  }
+}

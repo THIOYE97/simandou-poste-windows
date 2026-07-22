@@ -1,0 +1,56 @@
+# Construction du poste de travail Windows (TDR §VII — accès Bureau).
+#
+# La construction se fait sur un exécuteur Windows et non sous Linux : le
+# packaging aboutit bien sous Linux — un PE32+ valide est produit — mais
+# l'étape de signature et la fabrication de l'installeur NSIS y échouent, car
+# elles passent par wine. Plutôt que d'imposer wine à chaque poste de
+# développement, on construit là où c'est natif.
+#
+# Ce dépôt a `desktop/` pour racine : la source de l'application (main.js,
+# preload.js, package.json) est ici même, pas dans un sous-dossier.
+name: Poste Windows (.exe)
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_url:
+        description: "URL du serveur BCRG servie par l'application"
+        required: true
+        default: "https://app.simandou-screening.com"
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installer les dépendances
+        run: npm ci || npm install
+
+      - name: Construire l'installeur et la version portable
+        env:
+          # NB : main.js lit APP_URL au LANCEMENT (process.env.APP_URL), pas à
+          # la construction. Cette variable ne fige donc pas encore l'URL dans
+          # l'.exe — à traiter côté application (URL embarquée au build) si l'on
+          # veut livrer un poste pré-pointé sur test/production/secours.
+          APP_URL: ${{ github.event.inputs.app_url || 'https://app.simandou-screening.com' }}
+        run: |
+          npm run dist:win
+          npm run dist:win-portable
+
+      - name: Publier les artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bcrg-lbcft-windows
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+          if-no-files-found: error
